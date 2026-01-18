@@ -1,14 +1,16 @@
 """
 WhatsApp webhook endpoints for Twilio integration.
 """
-from fastapi import APIRouter, Form, Depends, Response, HTTPException
+from fastapi import APIRouter, Form, Depends, Response, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from twilio.twiml.messaging_response import MessagingResponse
 
+from app.config import settings
 from app.database import get_db
 from app.logging_config import get_logger
 from app.services.flow_manager import FlowManager
 from app.services.uic_service import UICService
+from app.services.qr_service import QRCodeService
 
 logger = get_logger(__name__)
 
@@ -17,10 +19,12 @@ router = APIRouter(prefix="/whatsapp", tags=["webhook"])
 # Initialize services
 flow_manager = FlowManager()
 uic_service = UICService()
+qr_service = QRCodeService() if settings.enable_qr_code else None
 
 
 @router.post("/webhook")
 async def whatsapp_webhook(
+    request: Request,
     From: str = Form(...),
     Body: str = Form(...),
     MessageSid: str = Form(None),
@@ -78,34 +82,38 @@ async def whatsapp_webhook(
             uic_code, is_new = await uic_service.create_uic(
                 db=db,
                 phone_number=phone_number,
-                first_name=collected_data["first_name"],
-                last_name=collected_data["last_name"],
-                birth_year=collected_data["birth_year"],
-                mother_init=collected_data["mother_init"],
-                health_zone=collected_data["health_zone"]
+                last_name_code=collected_data["last_name_code"],
+                first_name_code=collected_data["first_name_code"],
+                birth_year_digit=collected_data["birth_year_digit"],
+                city_code=collected_data["city_code"],
+                gender_code=collected_data["gender_code"]
             )
 
             # Prepare final message
             if is_new:
                 response_text = (
-                    f"🎉 Your Unique Identifier Code has been generated!\n\n"
-                    f"📋 Your UIC:\n"
+                    f"🎉 Votre Code d'Identification Unique a été généré!\n\n"
+                    f"📋 Votre CIU:\n"
                     f"━━━━━━━━━━━━━━\n"
                     f"  {uic_code}\n"
                     f"━━━━━━━━━━━━━━\n\n"
-                    f"✅ This code is now registered in your name.\n\n"
-                    f"💡 Save this code! You can request it again by starting a new conversation.\n\n"
-                    f"Type RESTART to generate a new UIC or update information."
+                    f"✅ Ce code est maintenant enregistré à votre nom.\n\n"
+                    f"💡 Sauvegardez ce code! Vous pouvez le redemander en commençant une nouvelle conversation.\n\n"
                 )
+                if settings.enable_qr_code:
+                    response_text += "📱 Vous recevrez également un code QR pour un accès facile.\n\n"
+                response_text += "Tapez RESTART pour générer un nouveau CIU ou mettre à jour vos informations."
             else:
                 response_text = (
-                    f"📋 Your existing UIC:\n"
+                    f"📋 Votre CIU existant:\n"
                     f"━━━━━━━━━━━━━━\n"
                     f"  {uic_code}\n"
                     f"━━━━━━━━━━━━━━\n\n"
-                    f"ℹ️ This code was previously generated with the same information.\n\n"
-                    f"Type RESTART if you need to update your information."
+                    f"ℹ️ Ce code a été généré précédemment avec les mêmes informations.\n\n"
                 )
+                if settings.enable_qr_code:
+                    response_text += "📱 Vous recevrez également un code QR.\n\n"
+                response_text += "Tapez RESTART si vous devez mettre à jour vos informations."
 
             logger.info(
                 "UIC delivered",
@@ -116,7 +124,35 @@ async def whatsapp_webhook(
 
         # Create Twilio TwiML response
         twiml_response = MessagingResponse()
-        twiml_response.message(response_text)
+        message = twiml_response.message(response_text)
+
+        # Add QR code if feature is enabled and conversation is complete
+        if settings.enable_qr_code and result["is_complete"] and qr_service:
+            try:
+                # Generate QR code
+                qr_path, qr_bytes = qr_service.generate_qr_code(uic_code)
+                
+                # Build public URL for QR code
+                # Get the request's base URL
+                base_url = str(request.base_url).rstrip('/')
+                qr_url = f"{base_url}/static/qr_codes/{uic_code}.png"
+                
+                # Add media URL to Twilio message
+                message.media(qr_url)
+                
+                logger.info(
+                    "QR code attached to message",
+                    uic_code=uic_code,
+                    qr_url=qr_url
+                )
+            except Exception as qr_error:
+                logger.error(
+                    "Failed to generate/attach QR code",
+                    uic_code=uic_code,
+                    error=str(qr_error),
+                    exc_info=True
+                )
+                # Don't fail the whole request, just log the error
 
         # Return as XML
         return Response(
@@ -135,7 +171,7 @@ async def whatsapp_webhook(
         # Send error message to user
         error_response = MessagingResponse()
         error_response.message(
-            "❌ Sorry, an error occurred. Please type RESTART to try again or contact support."
+            "❌ Désolé, une erreur s'est produite. Veuillez taper RESTART pour réessayer ou contacter le support."
         )
 
         return Response(

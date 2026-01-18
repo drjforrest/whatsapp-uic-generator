@@ -4,9 +4,19 @@ Get up and running in 5 minutes!
 
 ## Prerequisites
 
+- git
 - Python 3.12+
-- Twilio account
+- Twilio account (development only)
 - ngrok installed
+- Meta Cloud account
+
+**NOTE** This QuickStart guide and the accompanying README.md are prepared for deployment on a Linux server. For deployment on a Windows server (rare, but possible), there is a rough guide in the FR directory, but I cannot confirm its accuracy.
+
+## 0. Clone the Repository
+```
+git clone https://github.com/drjforrest/whatsapp-uic-generator.git
+cd whatsapp-uic-generator
+```
 
 ## 1. Install Dependencies
 

@@ -4,9 +4,8 @@ Conversation Flow Manager.
 Manages the state machine for multi-step conversations over WhatsApp.
 Handles question sequencing, answer collection, and session management.
 
-IMPORTANT: The questions ask for FULL information (e.g., "Where was your mother born?").
-The UICService extracts what it needs (first 4 letters, last 3 digits, etc.).
-Users should NOT be asked to manually extract parts of their data!
+IMPORTANT: All bot messages are in French for DRC deployment.
+The questions ask for codes that users should provide (e.g., 3-letter name codes).
 """
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
@@ -71,10 +70,10 @@ def validate_digits_only(answer: str) -> tuple[bool, Optional[str]]:
     answer = answer.strip()
 
     if not answer.isdigit():
-        return False, "Please enter only numbers (no letters or spaces)"
+        return False, "Veuillez entrer uniquement des chiffres (pas de lettres ou d'espaces)"
 
-    if len(answer) < 2:
-        return False, "Please enter at least 2 digits"
+    if len(answer) < 1:
+        return False, "Veuillez entrer au moins 1 chiffre"
 
     return True, None
 
@@ -84,10 +83,36 @@ def validate_letters_only(answer: str) -> tuple[bool, Optional[str]]:
     answer = answer.strip()
 
     if not answer.isalpha():
-        return False, "Please enter only letters (no numbers or special characters)"
+        return False, "Veuillez entrer uniquement des lettres (pas de chiffres ou de caractères spéciaux)"
 
     if len(answer) < 2:
-        return False, "Please enter at least 2 letters"
+        return False, "Veuillez entrer au moins 2 lettres"
+
+    return True, None
+
+
+def validate_gender_code(answer: str) -> tuple[bool, Optional[str]]:
+    """Validate that answer is a valid gender code (1, 2, 3, or 4)."""
+    answer = answer.strip()
+
+    if not answer.isdigit():
+        return False, "Veuillez entrer un chiffre (1, 2, 3 ou 4)"
+
+    if answer not in ['1', '2', '3', '4']:
+        return False, "Le code de genre doit être 1, 2, 3 ou 4"
+
+    return True, None
+
+
+def validate_city_code(answer: str) -> tuple[bool, Optional[str]]:
+    """Validate that answer is exactly 2 letters."""
+    answer = answer.strip().upper()
+
+    if not answer.isalpha():
+        return False, "Le code de ville doit contenir uniquement des lettres"
+
+    if len(answer) != 2:
+        return False, "Le code de ville doit contenir exactement 2 lettres"
 
     return True, None
 
@@ -95,10 +120,10 @@ def validate_letters_only(answer: str) -> tuple[bool, Optional[str]]:
 def validate_not_empty(answer: str) -> tuple[bool, Optional[str]]:
     """Validate that answer is not empty."""
     if not answer or not answer.strip():
-        return False, "Please provide an answer"
+        return False, "Veuillez fournir une réponse"
 
     if len(answer.strip()) < 1:
-        return False, "Answer is too short"
+        return False, "La réponse est trop courte"
 
     return True, None
 
@@ -115,83 +140,91 @@ class FlowManager:
     """
 
     # Define the conversation flow
-    # NOTE: These are PLACEHOLDER questions - customize for your specific use case!
-    # Users answer with FULL information; the system extracts what it needs (first letters, last digits, etc.)
+    # UIC Formula: LLLFFFYCG
+    # LLL = first 3 letters of last name code
+    # FFF = first 3 letters of first name code
+    # Y = last digit of birth year
+    # C = city code (2 letters)
+    # G = gender code (1 digit: 1, 2, 3, or 4)
     STEPS = [
         ConversationStep(
-            key="first_name",
+            key="last_name_code",
             question_en=(
                 "Question 1 of 5:\n\n"
-                "What year were you born?\n\n"
-                "Example: 1985"
+                "What are the first 3 letters of your last name?\n\n"
+                "Example: MBE"
             ),
             question_fr=(
                 "Question 1 sur 5:\n\n"
-                "Quelle année êtes-vous né(e)?\n\n"
-                "Exemple: 1985"
+                "Quelles sont les 3 premières lettres de votre nom de famille?\n\n"
+                "Exemple: MBE"
             ),
-            field_name="first_name",
-            validator=validate_not_empty
+            field_name="last_name_code",
+            validator=validate_letters_only
         ),
         ConversationStep(
-            key="last_name",
+            key="first_name_code",
             question_en=(
                 "Question 2 of 5:\n\n"
-                "Where was your mother born? (City or village)\n\n"
-                "Example: Kinshasa"
+                "What are the first 3 letters of your first name?\n\n"
+                "Example: IBR"
             ),
             question_fr=(
                 "Question 2 sur 5:\n\n"
-                "Où est née votre mère? (Ville ou village)\n\n"
-                "Exemple: Kinshasa"
+                "Quelles sont les 3 premières lettres de votre prénom?\n\n"
+                "Exemple: IBR"
             ),
-            field_name="last_name",
-            validator=validate_not_empty
+            field_name="first_name_code",
+            validator=validate_letters_only
         ),
         ConversationStep(
-            key="birth_year",
+            key="birth_year_digit",
             question_en=(
                 "Question 3 of 5:\n\n"
-                "What is your first name?\n\n"
-                "Example: Jean"
+                "What is the last digit of your birth year?\n\n"
+                "Example: 7"
             ),
             question_fr=(
                 "Question 3 sur 5:\n\n"
-                "Quel est votre prénom?\n\n"
-                "Exemple: Jean"
+                "Quel est le dernier chiffre de votre année de naissance?\n\n"
+                "Exemple: 7 (pour 1997)"
             ),
-            field_name="birth_year",
-            validator=validate_not_empty
+            field_name="birth_year_digit",
+            validator=validate_digits_only
         ),
         ConversationStep(
-            key="mother_init",
+            key="city_code",
             question_en=(
                 "Question 4 of 5:\n\n"
-                "What day of the month were you born?\n\n"
-                "Example: 15"
+                "What is your city code?\n\n"
+                "Example: DA"
             ),
             question_fr=(
                 "Question 4 sur 5:\n\n"
-                "Quel jour du mois êtes-vous né(e)?\n\n"
-                "Exemple: 15"
+                "Quel est le code de votre ville de naissance?\n"
+                "(2 lettres)\n\n"
+                "Exemple: DA (pour Dakar)"
             ),
-            field_name="mother_init",
-            validator=validate_not_empty
+            field_name="city_code",
+            validator=validate_city_code
         ),
         ConversationStep(
-            key="health_zone",
+            key="gender_code",
             question_en=(
                 "Question 5 of 5:\n\n"
-                "What is your family name?\n\n"
-                "Example: Kabila"
+                "What is your gender code?\n\n"
+                "Enter 1, 2, 3, or 4"
             ),
             question_fr=(
                 "Question 5 sur 5:\n\n"
-                "Quel est votre nom de famille?\n\n"
-                "Exemple: Kabila"
+                "Quel est votre code de genre?\n\n"
+                "1 = Homme\n"
+                "2 = Femme\n"
+                "3 = Trans\n"
+                "4 = Autre"
             ),
-            field_name="health_zone",
-            validator=validate_not_empty
+            field_name="gender_code",
+            validator=validate_gender_code
         ),
     ]
 
@@ -208,9 +241,9 @@ class FlowManager:
     )
 
     WELCOME_MESSAGE_FR = (
-        "👋 Bienvenue au Générateur UIC!\n\n"
-        "Je vais vous poser 5 questions pour générer votre Code d'Identification Unique (UIC).\n\n"
-        "📋 Votre UIC est:\n"
+        "👋 Bienvenue au Générateur CIU!\n\n"
+        "Je vais vous poser 5 questions pour générer votre Code d'Identification Unique (CIU).\n\n"
+        "📋 Votre CIU est:\n"
         "• Unique pour vous\n"
         "• Privé et sécurisé\n"
         "• Peut être régénéré si nécessaire\n\n"
@@ -227,7 +260,7 @@ class FlowManager:
 
     COMPLETION_MESSAGE_FR = (
         "✅ Merci! J'ai toutes les informations.\n\n"
-        "Génération de votre UIC sécurisé...\n"
+        "Génération de votre CIU sécurisé...\n"
         "⏳ Veuillez patienter..."
     )
 
@@ -239,7 +272,7 @@ class FlowManager:
         self,
         db: AsyncSession,
         phone_number: str,
-        language: str = "en"
+        language: str = "fr"
     ) -> ConversationSession:
         """
         Get existing session or create new one.
@@ -336,19 +369,19 @@ class FlowManager:
         if message.upper() == "RESTART":
             await self.restart_session(db, phone_number)
             return {
-                "response": self.WELCOME_MESSAGE_EN + "\n\n" + self.STEPS[0].get_question(),
+                "response": self.WELCOME_MESSAGE_FR + "\n\n" + self.STEPS[0].get_question("fr"),
                 "is_complete": False,
                 "collected_data": None
             }
 
         if message.upper() == "HELP":
             help_text = (
-                "📖 Help:\n\n"
-                "Commands:\n"
-                "• RESTART - Start over from the beginning\n"
-                "• HELP - Show this message\n\n"
-                "I will ask you 5 questions to generate your UIC.\n"
-                "Answer each question truthfully and press send."
+                "📖 Aide:\n\n"
+                "Commandes:\n"
+                "• RESTART - Recommencer depuis le début\n"
+                "• HELP - Afficher ce message\n\n"
+                "Je vais vous poser 5 questions pour générer votre CIU.\n"
+                "Répondez à chaque question et appuyez sur envoyer."
             )
             return {
                 "response": help_text,
@@ -361,7 +394,7 @@ class FlowManager:
 
         # If step is 0, this is a welcome message
         if session.current_step == 0 and not message:
-            response = self.WELCOME_MESSAGE_EN + "\n\n" + self.STEPS[0].get_question()
+            response = self.WELCOME_MESSAGE_FR + "\n\n" + self.STEPS[0].get_question("fr")
             return {
                 "response": response,
                 "is_complete": False,
@@ -405,11 +438,11 @@ class FlowManager:
         if session.current_step >= len(self.STEPS):
             # Collect all data
             collected_data = {
-                "first_name": session.first_name,
-                "last_name": session.last_name,
-                "birth_year": session.birth_year,
-                "mother_init": session.mother_init,
-                "health_zone": session.health_zone,
+                "last_name_code": session.last_name_code,
+                "first_name_code": session.first_name_code,
+                "birth_year_digit": session.birth_year_digit,
+                "city_code": session.city_code,
+                "gender_code": session.gender_code,
             }
 
             # Delete session (conversation complete)
@@ -423,7 +456,7 @@ class FlowManager:
             )
 
             return {
-                "response": self.COMPLETION_MESSAGE_EN,
+                "response": self.COMPLETION_MESSAGE_FR,
                 "is_complete": True,
                 "collected_data": collected_data
             }
@@ -432,7 +465,7 @@ class FlowManager:
         await db.commit()
 
         next_step = self.STEPS[session.current_step]
-        response = f"✅ Got it!\n\n{next_step.get_question(session.language)}"
+        response = f"✅ Compris!\n\n{next_step.get_question(session.language)}"
 
         return {
             "response": response,

@@ -69,3 +69,7 @@ dmypy.json
 # Alembic
 alembic/versions/*.pyc
 whatsapp-uic-generator/
+
+# QR Codes (generated files, don't commit)
+static/qr_codes/*.png
+!static/qr_codes/.gitkeep

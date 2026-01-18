@@ -66,6 +66,12 @@ class Settings(BaseSettings):
         description="Minutes before user session expires"
     )
 
+    # QR Code Feature
+    enable_qr_code: bool = Field(
+        default=False,
+        description="Enable QR code generation and delivery via WhatsApp"
+    )
+
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_json: bool = False

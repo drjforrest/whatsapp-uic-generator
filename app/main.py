@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.webhook import router as webhook_router
 from app.config import settings
@@ -65,6 +66,14 @@ if settings.debug:
 
 # Include routers
 app.include_router(webhook_router)
+
+# Mount static files for QR codes (if feature enabled)
+if settings.enable_qr_code:
+    from pathlib import Path
+    static_dir = Path("static")
+    static_dir.mkdir(exist_ok=True)
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+    logger.info("Static files mounted for QR codes", directory="static")
 
 
 @app.get("/")

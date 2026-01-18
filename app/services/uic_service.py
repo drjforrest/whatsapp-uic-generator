@@ -89,11 +89,11 @@ class UICService:
 
     def _calculate_input_hash(
         self,
-        first_name: str,
-        last_name: str,
-        birth_year: str,
-        mother_init: str,
-        health_zone: str
+        last_name_code: str,
+        first_name_code: str,
+        birth_year_digit: str,
+        city_code: str,
+        gender_code: str
     ) -> str:
         """
         Calculate SHA-256 hash of normalized inputs.
@@ -102,90 +102,75 @@ class UICService:
         the raw input data.
 
         Args:
-            first_name: Normalized first name
-            last_name: Normalized last name
-            birth_year: Normalized birth year
-            mother_init: Normalized mother's initial
-            health_zone: Normalized health zone
+            last_name_code: Normalized last name code
+            first_name_code: Normalized first name code
+            birth_year_digit: Last digit of birth year
+            city_code: Normalized city code
+            gender_code: Gender code (M or F)
 
         Returns:
             Hexadecimal SHA-256 hash
         """
         # Create deterministic concatenation
-        raw_input = f"{first_name}|{last_name}|{birth_year}|{mother_init}|{health_zone}"
+        raw_input = f"{last_name_code}|{first_name_code}|{birth_year_digit}|{city_code}|{gender_code}"
 
         # Hash without salt (for duplicate detection)
         return hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
 
     def _generate_uic_code(
         self,
-        first_name: str,
-        last_name: str,
-        birth_year: str,
-        mother_init: str,
-        health_zone: str
+        last_name_code: str,
+        first_name_code: str,
+        birth_year_digit: str,
+        city_code: str,
+        gender_code: str
     ) -> str:
         """
         Generate the actual UIC code.
 
-        NOTE: Parameter names don't match the placeholder questions!
-        Current placeholder question mapping:
-        - first_name = Answer to Q1 (birth year: 1985)
-        - last_name = Answer to Q2 (mother's birthplace: Kinshasa)
-        - birth_year = Answer to Q3 (person's first name: Jean)
-        - mother_init = Answer to Q4 (day of month: 15)
-        - health_zone = Answer to Q5 (family name: Kabila)
+        UIC Formula: LLLFFFYCG
+        - LLL = first 3 letters of last name code
+        - FFF = first 3 letters of first name code
+        - Y = last digit of birth year (1 digit)
+        - C = city code (2 letters)
+        - G = gender code (1 digit: 1, 2, 3, or 4)
 
-        Format: YYY-MMMMDD-FNNN-LLLL-HHHHH (customize as needed!)
-        Where (current placeholder extraction):
-        - YYY: Last 3 digits of birth year (Q1)
-        - MMMM: First 4 letters of mother's birthplace (Q2)
-        - DD: Day of month (Q4)
-        - FNNN: First 3 letters of first name (Q3)
-        - LLLL: First 4 letters of family name (Q5)
-        - HHHHH: 5-character hash suffix for uniqueness
+        Example: MBEIBR7DA1
+        - MBE = Mbengue (last name)
+        - IBR = Ibrahima (first name)
+        - 7 = 1997 (birth year)
+        - DA = Dakar (city)
+        - 1 = Homme (gender)
 
         Args:
-            first_name: Answer to question 1 (normalized)
-            last_name: Answer to question 2 (normalized)
-            birth_year: Answer to question 3 (normalized)
-            mother_init: Answer to question 4 (normalized)
-            health_zone: Answer to question 5 (normalized)
+            last_name_code: Last name code (3 letters)
+            first_name_code: First name code (3 letters)
+            birth_year_digit: Last digit of birth year (1 digit)
+            city_code: City code (2 letters)
+            gender_code: Gender code (1 digit: 1, 2, 3, or 4)
 
         Returns:
-            Formatted UIC code
+            Formatted UIC code (10 characters)
         """
-        # Extract components based on placeholder questions
-        # CUSTOMIZE THESE EXTRACTIONS FOR YOUR ACTUAL QUESTIONS!
+        # Extract and normalize components
+        lll = last_name_code[:3].upper().ljust(3, 'X')       # Ensure 3 letters
+        fff = first_name_code[:3].upper().ljust(3, 'X')      # Ensure 3 letters
+        y = birth_year_digit[-1:].upper()                     # Last digit
+        c = city_code[:2].upper().ljust(2, 'X')              # Ensure 2 letters
+        g = gender_code[:1].upper()                           # 1, 2, 3, or 4
 
-        year_last3 = first_name[-3:].rjust(3, '0')      # Q1: Last 3 digits of year
-        mother_loc4 = last_name[:4].ljust(4, 'X')       # Q2: First 4 letters of location
-        day_of_month = mother_init[:2].rjust(2, '0')    # Q4: Day of month
-        first_name3 = birth_year[:3].ljust(3, 'X')      # Q3: First 3 letters of name
-        family_name4 = health_zone[:4].ljust(4, 'X')    # Q5: First 4 letters of surname
-
-        # Create salted hash for uniqueness
-        raw_seed = f"{first_name}{last_name}{birth_year}{mother_init}{health_zone}"
-        hash_input = f"{raw_seed}{self.salt}".encode('utf-8')
-        full_hash = hashlib.sha256(hash_input).hexdigest().upper()
-
-        # Take first 5 characters of hash
-        hash_suffix = full_hash[:5]
-
-        # Format final UIC - CUSTOMIZE THIS FORMAT!
-        # Current format: YYY-MMMMDD-FNNN-LLLL-HHHHH
-        uic_code = f"{year_last3}-{mother_loc4}{day_of_month}-{first_name3}-{family_name4}-{hash_suffix}"
+        # Format final UIC: LLLFFFYCG (10 characters total)
+        uic_code = f"{lll}{fff}{y}{c}{g}"
 
         logger.debug(
             "Generated UIC code",
             uic_code=uic_code,
             components={
-                "year_last3": year_last3,
-                "mother_loc4": mother_loc4,
-                "day": day_of_month,
-                "first_name3": first_name3,
-                "family_name4": family_name4,
-                "hash": hash_suffix
+                "last_name_code": lll,
+                "first_name_code": fff,
+                "birth_year_digit": y,
+                "city_code": c,
+                "gender_code": g
             }
         )
 
@@ -193,74 +178,67 @@ class UICService:
 
     def normalize_inputs(
         self,
-        first_name: str,
-        last_name: str,
-        birth_year: str,
-        mother_init: str,
-        health_zone: str
+        last_name_code: str,
+        first_name_code: str,
+        birth_year_digit: str,
+        city_code: str,
+        gender_code: str
     ) -> Tuple[str, str, str, str, str]:
         """
         Normalize all inputs for UIC generation.
 
-        NOTE: Parameter names don't match placeholder questions!
-        - first_name = Q1 answer (birth year)
-        - last_name = Q2 answer (mother's birthplace)
-        - birth_year = Q3 answer (person's first name)
-        - mother_init = Q4 answer (day of month)
-        - health_zone = Q5 answer (family name)
-
         Args:
-            first_name: Answer to Q1 (raw)
-            last_name: Answer to Q2 (raw)
-            birth_year: Answer to Q3 (raw)
-            mother_init: Answer to Q4 (raw)
-            health_zone: Answer to Q5 (raw)
+            last_name_code: Last name code (raw)
+            first_name_code: First name code (raw)
+            birth_year_digit: Last digit of birth year (raw)
+            city_code: City code (raw)
+            gender_code: Gender code (raw)
 
         Returns:
             Tuple of normalized inputs in same order
         """
-        norm_q1 = self._normalize_text(first_name)    # Birth year
-        norm_q2 = self._normalize_text(last_name)     # Mother's birthplace
-        norm_q3 = self._normalize_text(birth_year)    # Person's first name
-        norm_q4 = self._normalize_text(mother_init)   # Day of month
-        norm_q5 = self._normalize_text(health_zone)   # Family name
+        norm_lnc = self._normalize_text(last_name_code)
+        norm_fnc = self._normalize_text(first_name_code)
+        norm_byd = self._normalize_text(birth_year_digit)
+        norm_cc = self._normalize_text(city_code)
+        norm_gc = self._normalize_text(gender_code)
 
         logger.info(
             "Normalized inputs",
-            q1_birth_year=norm_q1,
-            q2_mother_place=norm_q2,
-            q3_first_name=norm_q3,
-            q4_day=norm_q4,
-            q5_family_name=norm_q5
+            last_name_code=norm_lnc,
+            first_name_code=norm_fnc,
+            birth_year_digit=norm_byd,
+            city_code=norm_cc,
+            gender_code=norm_gc
         )
 
-        return norm_q1, norm_q2, norm_q3, norm_q4, norm_q5
+        return norm_lnc, norm_fnc, norm_byd, norm_cc, norm_gc
 
     async def check_existing_uic(
         self,
         db: AsyncSession,
-        first_name: str,
-        last_name: str,
-        birth_year: str,
-        mother_init: str,
-        health_zone: str
+        last_name_code: str,
+        first_name_code: str,
+        birth_year_digit: str,
+        city_code: str,
+        gender_code: str
     ) -> Optional[UICRecord]:
         """
         Check if a UIC already exists for these inputs.
 
         Args:
             db: Database session
-            first_name: Normalized first name
-            last_name: Normalized last name
-            birth_year: Normalized birth year
-            mother_init: Normalized mother's initial
-            health_zone: Normalized health zone
+            last_name_code: Normalized last name code
+            first_name_code: Normalized first name code
+            birth_year_digit: Last digit of birth year
+            city_code: Normalized city code
+            gender_code: Gender code
 
         Returns:
             Existing UICRecord if found, None otherwise
         """
         input_hash = self._calculate_input_hash(
-            first_name, last_name, birth_year, mother_init, health_zone
+            last_name_code, first_name_code, birth_year_digit, city_code, gender_code
         )
 
         stmt = select(UICRecord).where(
@@ -284,11 +262,11 @@ class UICService:
         self,
         db: AsyncSession,
         phone_number: str,
-        first_name: str,
-        last_name: str,
-        birth_year: str,
-        mother_init: str,
-        health_zone: str
+        last_name_code: str,
+        first_name_code: str,
+        birth_year_digit: str,
+        city_code: str,
+        gender_code: str
     ) -> Tuple[str, bool]:
         """
         Create or retrieve a UIC for the given inputs.
@@ -296,11 +274,11 @@ class UICService:
         Args:
             db: Database session
             phone_number: User's WhatsApp phone number
-            first_name: Raw first name
-            last_name: Raw last name
-            birth_year: Raw birth year
-            mother_init: Raw mother's initial
-            health_zone: Raw health zone
+            last_name_code: Last name code
+            first_name_code: First name code
+            birth_year_digit: Last digit of birth year
+            city_code: City code
+            gender_code: Gender code
 
         Returns:
             Tuple of (uic_code, is_new)
@@ -308,13 +286,13 @@ class UICService:
             - is_new: True if newly created, False if existing
         """
         # Normalize all inputs
-        norm_fn, norm_ln, norm_by, norm_mi, norm_hz = self.normalize_inputs(
-            first_name, last_name, birth_year, mother_init, health_zone
+        norm_lnc, norm_fnc, norm_byd, norm_cc, norm_gc = self.normalize_inputs(
+            last_name_code, first_name_code, birth_year_digit, city_code, gender_code
         )
 
         # Check for existing UIC
         existing_record = await self.check_existing_uic(
-            db, norm_fn, norm_ln, norm_by, norm_mi, norm_hz
+            db, norm_lnc, norm_fnc, norm_byd, norm_cc, norm_gc
         )
 
         if existing_record:
@@ -333,22 +311,22 @@ class UICService:
 
         # Generate new UIC
         uic_code = self._generate_uic_code(
-            norm_fn, norm_ln, norm_by, norm_mi, norm_hz
+            norm_lnc, norm_fnc, norm_byd, norm_cc, norm_gc
         )
 
         input_hash = self._calculate_input_hash(
-            norm_fn, norm_ln, norm_by, norm_mi, norm_hz
+            norm_lnc, norm_fnc, norm_byd, norm_cc, norm_gc
         )
 
         # Create database record
         uic_record = UICRecord(
             uic_code=uic_code,
             phone_number=phone_number,
-            normalized_first_name=norm_fn,
-            normalized_last_name=norm_ln,
-            normalized_birth_year=norm_by,
-            normalized_mother_init=norm_mi,
-            normalized_health_zone=norm_hz,
+            normalized_last_name_code=norm_lnc,
+            normalized_first_name_code=norm_fnc,
+            normalized_birth_year_digit=norm_byd,
+            normalized_city_code=norm_cc,
+            normalized_gender_code=norm_gc,
             input_hash=input_hash,
             created_at=datetime.utcnow(),
             last_requested_at=datetime.utcnow(),

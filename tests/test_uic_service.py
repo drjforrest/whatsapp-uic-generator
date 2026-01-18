@@ -42,9 +42,6 @@ class TestUICServiceNormalization:
         result = self.service._normalize_text("Jean-Paul")
         assert result == "JEANPAUL"
 
-        result = self.service._normalize_text("Kinshasa (Gombe)")
-        assert result == "KINSHASA"  # Note: this will remove everything after space
-
     def test_normalize_handles_empty(self):
         """Test that empty strings are handled."""
         result = self.service._normalize_text("")
@@ -70,30 +67,32 @@ class TestUICGeneration:
         self.service = UICService(salt="test_salt_for_testing")
 
     def test_generate_uic_format(self):
-        """Test that UIC has correct format."""
+        """Test that UIC has correct format: LLLFFFYCG."""
         uic = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
+            last_name_code="MBE",
+            first_name_code="IBR", 
+            birth_year_digit="7",
+            city_code="DA",
+            gender_code="1"
         )
 
-        # Format should be: FNLN-BYMI-HHHHH
-        assert len(uic) == 15  # 4 + 1 + 3 + 1 + 5 + 1 = 15
-        assert uic[4] == "-"
-        assert uic[8] == "-"
-
+        # Format should be: LLLFFFYCG = 10 characters
+        assert len(uic) == 10
+        
         # Check components
-        parts = uic.split("-")
-        assert len(parts) == 3
-        assert parts[0] == "JEKA"  # JE from Jean, KA from Kabila
-        assert parts[1] == "85M"   # 85 from 1985, M from Marie
-        assert len(parts[2]) == 5  # 5-char hash
+        assert uic[:3] == "MBE"  # Last name code
+        assert uic[3:6] == "IBR"  # First name code
+        assert uic[6] == "7"      # Birth year digit
+        assert uic[7:9] == "DA"   # City code (2 letters)
+        assert uic[9] == "1"      # Gender code (1 digit)
 
     def test_generate_uic_deterministic(self):
         """Test that same inputs produce same UIC."""
         uic1 = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
+            "MBE", "IBR", "7", "DA", "1"
         )
         uic2 = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
+            "MBE", "IBR", "7", "DA", "1"
         )
 
         assert uic1 == uic2
@@ -101,37 +100,41 @@ class TestUICGeneration:
     def test_generate_uic_different_inputs(self):
         """Test that different inputs produce different UICs."""
         uic1 = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
+            "MBE", "IBR", "7", "DA", "1"
         )
         uic2 = self.service._generate_uic_code(
-            "PAUL", "KABILA", "1985", "M", "KINSHASA"
+            "MBE", "AMA", "7", "DA", "1"  # Different first name
         )
 
         assert uic1 != uic2
 
-    def test_generate_uic_handles_short_names(self):
-        """Test that short names are padded."""
+    def test_generate_uic_handles_short_codes(self):
+        """Test that short codes are padded."""
         uic = self.service._generate_uic_code(
-            "J", "K", "1985", "M", "KINSHASA"
+            "K", "J", "5", "D", "2"
         )
 
-        parts = uic.split("-")
-        assert len(parts[0]) == 4  # Should be padded with X
+        # Should pad to proper length
+        assert len(uic) == 10
+        assert uic[:3] == "KXX"  # Padded with X
+        assert uic[3:6] == "JXX"  # Padded with X
+        assert uic[7:9] == "DX"   # Padded with X
 
-    def test_normalize_inputs_expands_year(self):
-        """Test that 2-digit years are expanded."""
-        fn, ln, by, mi, hz = self.service.normalize_inputs(
-            "Jean", "Kabila", "85", "M", "Kinshasa"
+    def test_normalize_inputs_complete(self):
+        """Test complete input normalization."""
+        lnc, fnc, byd, cc, gc = self.service.normalize_inputs(
+            "MBE",
+            "IBR",
+            "7",
+            "DA",
+            "1"
         )
 
-        assert by == "1985"  # Should expand to 1985
-
-        # Test for recent years
-        fn, ln, by, mi, hz = self.service.normalize_inputs(
-            "Jean", "Kabila", "05", "M", "Kinshasa"
-        )
-
-        assert by == "2005"  # Should expand to 2005
+        assert lnc == "MBE"
+        assert fnc == "IBR"
+        assert byd == "7"
+        assert cc == "DA"
+        assert gc == "1"
 
 
 class TestInputNormalization:
@@ -141,71 +144,74 @@ class TestInputNormalization:
         """Set up test fixtures."""
         self.service = UICService(salt="test_salt_for_testing")
 
-    def test_normalize_inputs_complete(self):
-        """Test complete input normalization."""
-        fn, ln, by, mi, hz = self.service.normalize_inputs(
-            "Gédéon",
-            "Kanyinda",
-            "1990",
-            "Marie",
-            "Kinshasa"
-        )
-
-        assert fn == "GEDEON"
-        assert ln == "KANYINDA"
-        assert by == "1990"
-        assert mi == "MARIE"
-        assert hz == "KINSHASA"
-
     def test_normalize_inputs_handles_variations(self):
         """Test that variations produce same normalized output."""
         result1 = self.service.normalize_inputs(
-            "gédéon", "KANYINDA", "90", "m", "kinshasa"
+            "mbe", "ibr", "7", "da", "1"
         )
         result2 = self.service.normalize_inputs(
-            "Gédéon", "Kanyinda", "1990", "M", "Kinshasa"
+            "MBE", "IBR", "7", "DA", "1"
         )
 
-        assert result1[0] == result2[0]  # first_name
-        assert result1[1] == result2[1]  # last_name
-        assert result1[2] == result2[2]  # birth_year
-        assert result1[3] == result2[3]  # mother_init
-        assert result1[4] == result2[4]  # health_zone
+        assert result1[0] == result2[0]  # last_name_code
+        assert result1[1] == result2[1]  # first_name_code
+        assert result1[2] == result2[2]  # birth_year_digit
+        assert result1[3] == result2[3]  # city_code
+        assert result1[4] == result2[4]  # gender_code
+
+    def test_normalize_removes_accents_from_codes(self):
+        """Test that accents are removed from name codes."""
+        lnc, fnc, byd, cc, gc = self.service.normalize_inputs(
+            "Gédéon",  # Should become GEDEON
+            "François",  # Should become FRANCOIS
+            "5",
+            "12",
+            "F"
+        )
+
+        assert lnc == "GEDEON"
+        assert fnc == "FRANCOIS"
 
 
 class TestCollisionPrevention:
-    """Test that UIC generation prevents collisions."""
+    """Test that UIC generation works correctly."""
 
     def setup_method(self):
         """Set up test fixtures."""
         self.service = UICService(salt="test_salt_for_testing")
 
-    def test_different_salts_different_uics(self):
-        """Test that different salts produce different UICs."""
-        service1 = UICService(salt="salt1")
-        service2 = UICService(salt="salt2")
-
-        uic1 = service1._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
-        )
-        uic2 = service2._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
-        )
-
-        # Prefixes should be same, but hashes should differ
-        assert uic1[:9] == uic2[:9]  # JEKA-85M-
-        assert uic1[9:] != uic2[9:]  # Hash part should differ
-
-    def test_similar_names_different_uics(self):
+    def test_similar_codes_different_uics(self):
         """Test that similar but different inputs produce different UICs."""
         uic1 = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASA"
+            "MBE", "IBR", "7", "DA", "1"
         )
         uic2 = self.service._generate_uic_code(
-            "JEAN", "KABILA", "1985", "M", "KINSHASAA"  # One extra A
+            "MBE", "IBR", "7", "DA", "2"  # Different gender
         )
 
         assert uic1 != uic2
+
+    def test_complete_uic_examples(self):
+        """Test complete UIC generation with real examples."""
+        # Example 1: Homme from Dakar
+        uic1 = self.service._generate_uic_code(
+            last_name_code="MBE",
+            first_name_code="IBR",
+            birth_year_digit="7",
+            city_code="DA",
+            gender_code="1"
+        )
+        assert uic1 == "MBEIBR7DA1"
+
+        # Example 2: Femme from Kinshasa  
+        uic2 = self.service._generate_uic_code(
+            last_name_code="MOB",
+            first_name_code="MAR",
+            birth_year_digit="3",
+            city_code="KI",
+            gender_code="2"
+        )
+        assert uic2 == "MOBMAR3KI2"
 
 
 if __name__ == "__main__":

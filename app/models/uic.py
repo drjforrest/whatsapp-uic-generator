@@ -42,30 +42,30 @@ class UICRecord(Base):
     )
 
     # Normalized input data (for duplicate detection)
-    normalized_first_name: Mapped[str] = mapped_column(
+    normalized_last_name_code: Mapped[str] = mapped_column(
         String(10),
         nullable=False,
-        comment="Normalized first name initials"
+        comment="Normalized last name code"
     )
-    normalized_last_name: Mapped[str] = mapped_column(
+    normalized_first_name_code: Mapped[str] = mapped_column(
         String(10),
         nullable=False,
-        comment="Normalized last name initials"
+        comment="Normalized first name code"
     )
-    normalized_birth_year: Mapped[str] = mapped_column(
-        String(4),
+    normalized_birth_year_digit: Mapped[str] = mapped_column(
+        String(1),
         nullable=False,
-        comment="Normalized birth year"
+        comment="Last digit of birth year"
     )
-    normalized_mother_init: Mapped[str] = mapped_column(
-        String(5),
+    normalized_city_code: Mapped[str] = mapped_column(
+        String(10),
         nullable=False,
-        comment="Normalized mother's initial"
+        comment="Normalized city code"
     )
-    normalized_health_zone: Mapped[str] = mapped_column(
-        String(20),
+    normalized_gender_code: Mapped[str] = mapped_column(
+        String(1),
         nullable=False,
-        comment="Normalized health zone"
+        comment="Gender code (M or F)"
     )
 
     # Hash of the normalized inputs (for collision detection)
@@ -117,11 +117,11 @@ class UICRecord(Base):
     __table_args__ = (
         Index(
             'ix_uic_normalized_data',
-            'normalized_first_name',
-            'normalized_last_name',
-            'normalized_birth_year',
-            'normalized_mother_init',
-            'normalized_health_zone'
+            'normalized_last_name_code',
+            'normalized_first_name_code',
+            'normalized_birth_year_digit',
+            'normalized_city_code',
+            'normalized_gender_code'
         ),
     )
 
@@ -157,11 +157,11 @@ class ConversationSession(Base):
     )
 
     # Collected answers (stored as JSON-compatible format)
-    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    birth_year: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
-    mother_init: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
-    health_zone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    last_name_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="Last name code (3 letters)")
+    first_name_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="First name code (3 letters)")
+    birth_year_digit: Mapped[Optional[str]] = mapped_column(String(1), nullable=True, comment="Last digit of birth year")
+    city_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="City code")
+    gender_code: Mapped[Optional[str]] = mapped_column(String(1), nullable=True, comment="Gender code (M or F)")
 
     # Session metadata
     created_at: Mapped[datetime] = mapped_column(
@@ -203,9 +203,9 @@ class ConversationSession(Base):
     def is_complete(self) -> bool:
         """Check if all answers have been collected."""
         return all([
-            self.first_name,
-            self.last_name,
-            self.birth_year,
-            self.mother_init,
-            self.health_zone
+            self.last_name_code,
+            self.first_name_code,
+            self.birth_year_digit,
+            self.city_code,
+            self.gender_code
         ])

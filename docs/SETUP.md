@@ -325,9 +325,9 @@ You should receive your UIC:
 🎉 Your Unique Identifier Code has been generated!
 
 📋 Your UIC:
-━━━━━━━━━━━━━━
+==============
   JEKA-85M-A3F9D
-━━━━━━━━━━━━━━
+==============
 
 ✅ This code is now registered in your name.
 
@@ -349,9 +349,9 @@ You should receive:
 
 ```
 📋 Your existing UIC:
-━━━━━━━━━━━━━━
+==============
   JEKA-85M-A3F9D
-━━━━━━━━━━━━━━
+==============
 
 ℹ️ This code was previously generated with the same information.
 
