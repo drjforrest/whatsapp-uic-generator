@@ -98,14 +98,19 @@ async def health():
     }
 
 
-if __name__ == "__main__":
+def run() -> None:
+    """Start the application with uvicorn."""
     import uvicorn
 
-    # Run with: python -m app.main
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=8000,
         reload=settings.debug,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )
+
+
+if __name__ == "__main__":
+    # Run with: python -m app.main
+    run()
