@@ -10,21 +10,21 @@ A production-grade WhatsApp bot system for generating Unique Identifier Codes (U
 
 ## Table of Contents
 
-1. [Overview](overview)
-2. [Deployment Environments](deployment-environments)
-3. [Technical Prerequisites](technical-prerequisites)
-4. [Meta Registration (WhatsApp Business API)](meta-registration-whatsapp-business-api)
-5. [Server Configuration](server-configuration)
-6. [Application Installation](application-installation)
-7. [Environment Variable Configuration](environment-variable-configuration)
-8. [Production Deployment](production-deployment)
-9. [QR Code Feature (Optional)](qr-code-feature-optional)
-10. [Testing and Validation](testing-and-validation)
-11. [Maintenance and Monitoring](maintenance-and-monitoring)
-12. [Migrating from Twilio to Meta Cloud API](migrating-from-twilio-to-meta-cloud-api)
-13. [DHIS-2 Integration](dhis-2-integration)
-14. [Troubleshooting](troubleshooting)
-15. [Support](support)
+1. [Overview](#overview)
+2. [Deployment Environments](#deployment-environments)
+3. [Technical Prerequisites](#technical-prerequisites)
+4. [Meta Registration (WhatsApp Business API)](#meta-registration-whatsapp-business-api)
+5. [Server Configuration](#server-configuration)
+6. [Application Installation](#application-installation)
+7. [Environment Variable Configuration](#environment-variable-configuration)
+8. [Production Deployment](#production-deployment)
+9. [QR Code Feature (Optional)](#qr-code-feature-optional)
+10. [Testing and Validation](#testing-and-validation)
+11. [Maintenance and Monitoring](#maintenance-and-monitoring)
+12. [Migrating from Twilio to Meta Cloud API](#migrating-from-twilio-to-meta-cloud-api)
+13. [DHIS-2 Integration](#dhis-2-integration)
+14. [Troubleshooting](#troubleshooting)
+15. [Support](#support)
 
 ---
 

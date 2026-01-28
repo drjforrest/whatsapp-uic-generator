@@ -1,0 +1,568 @@
+/* 
+ * Pandoc PDF Stylesheet for WhatsApp UIC Generator Documentation
+ * French Technical Documentation Style
+ * Optimized for professional printing and digital distribution
+ */
+
+/* ==================== PAGE SETUP ==================== */
+@page {
+    size: letter;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    
+    @top-right {
+        content: "Générateur de CIU WhatsApp";
+        font-size: 9pt;
+        color: #666;
+        font-style: italic;
+    }
+    
+    @bottom-center {
+        content: counter(page);
+        font-size: 9pt;
+        color: #666;
+    }
+}
+
+@page :first {
+    @top-right {
+        content: none;
+    }
+}
+
+/* ==================== FONTS & BODY ==================== */
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+}
+
+/* ==================== HEADINGS ==================== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1a1a1a;
+    page-break-after: avoid;
+    break-after: avoid;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 24pt;
+    border-bottom: 3px solid #0066cc;
+    padding-bottom: 0.3em;
+    margin-top: 0;
+    page-break-before: always;
+    break-before: page;
+}
+
+h1:first-of-type {
+    page-break-before: avoid;
+    break-before: avoid;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+h2 {
+    font-size: 18pt;
+    border-bottom: 2px solid #0099ff;
+    padding-bottom: 0.2em;
+    margin-top: 1.2em;
+    color: #0066cc;
+}
+
+h3 {
+    font-size: 14pt;
+    color: #0066cc;
+    border-left: 4px solid #0099ff;
+    padding-left: 0.5em;
+}
+
+h4 {
+    font-size: 12pt;
+    color: #004d99;
+    font-style: italic;
+}
+
+h5 {
+    font-size: 11pt;
+    color: #004d99;
+}
+
+h6 {
+    font-size: 10pt;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==================== PARAGRAPHS ==================== */
+p {
+    margin: 0.8em 0;
+    orphans: 3;
+    widows: 3;
+}
+
+/* ==================== LINKS ==================== */
+a {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Show URLs in print */
+a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #666;
+    font-style: italic;
+}
+
+/* Don't show anchor links */
+a[href^="#"]:after {
+    content: "";
+}
+
+/* ==================== LISTS ==================== */
+ul, ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+li {
+    margin: 0.5em 0;
+    orphans: 2;
+    widows: 2;
+}
+
+ul ul, ol ol, ul ol, ol ul {
+    margin: 0.3em 0;
+}
+
+/* Custom bullet styles */
+ul {
+    list-style-type: disc;
+}
+
+ul ul {
+    list-style-type: circle;
+}
+
+ul ul ul {
+    list-style-type: square;
+}
+
+/* Checklist style */
+li:has(input[type="checkbox"]) {
+    list-style-type: none;
+    margin-left: -1.5em;
+}
+
+/* ==================== CODE BLOCKS ==================== */
+code {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 9pt;
+    background-color: #f5f5f5;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+    color: #c7254e;
+}
+
+pre {
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-left: 4px solid #0066cc;
+    border-radius: 4px;
+    padding: 1em;
+    overflow-x: auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin: 1em 0;
+    font-size: 9pt;
+    line-height: 1.4;
+}
+
+pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: #333;
+    font-size: 9pt;
+}
+
+/* Syntax highlighting for specific languages */
+.sourceCode {
+    background-color: #f8f8f8;
+}
+
+.bash .kw { color: #007020; font-weight: bold; }
+.bash .st { color: #4070a0; }
+.bash .co { color: #60a0b0; font-style: italic; }
+
+.python .kw { color: #007020; font-weight: bold; }
+.python .st { color: #4070a0; }
+.python .co { color: #60a0b0; font-style: italic; }
+
+/* ==================== BLOCKQUOTES ==================== */
+blockquote {
+    margin: 1.5em 1em;
+    padding: 0.8em 1.2em;
+    border-left: 5px solid #0099ff;
+    background-color: #f0f8ff;
+    font-style: italic;
+    color: #555;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+blockquote p {
+    margin: 0.5em 0;
+}
+
+blockquote p:first-child:before {
+    content: "💡 ";
+}
+
+/* ==================== TABLES ==================== */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+thead {
+    background-color: #0066cc;
+    color: white;
+    font-weight: bold;
+}
+
+th {
+    padding: 0.8em;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+td {
+    padding: 0.6em 0.8em;
+    border: 1px solid #ddd;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #f0f8ff;
+}
+
+/* ==================== HORIZONTAL RULES ==================== */
+hr {
+    border: none;
+    border-top: 2px solid #e0e0e0;
+    margin: 2em 0;
+    page-break-after: avoid;
+    break-after: avoid;
+}
+
+/* ==================== EMPHASIS ==================== */
+strong, b {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+em, i {
+    font-style: italic;
+    color: #444;
+}
+
+/* ==================== SPECIAL BOXES ==================== */
+
+/* Warning boxes */
+.warning, div:has(> p:first-child:contains("⚠️")) {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 1em;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Success/Info boxes */
+.info, div:has(> p:first-child:contains("✅")) {
+    background-color: #d4edda;
+    border-left: 5px solid #28a745;
+    padding: 1em;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Error/Danger boxes */
+.danger, div:has(> p:first-child:contains("❌")) {
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    padding: 1em;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Note boxes */
+.note, div:has(> p:first-child:contains("📋")) {
+    background-color: #e7f3ff;
+    border-left: 5px solid #2196f3;
+    padding: 1em;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Placeholder boxes */
+div:has(> pre:contains("[À COMPLÉTER")) {
+    background-color: #fff9e6;
+    border: 2px dashed #ff9800;
+    padding: 0.5em;
+    margin: 1em 0;
+}
+
+/* ==================== IMAGES ==================== */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5em auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+figure {
+    margin: 1.5em 0;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+figcaption {
+    font-style: italic;
+    color: #666;
+    font-size: 9pt;
+    margin-top: 0.5em;
+}
+
+/* ==================== TITLE PAGE ==================== */
+.title {
+    font-size: 32pt;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 3cm;
+    margin-bottom: 1cm;
+    color: #0066cc;
+    line-height: 1.2;
+}
+
+.subtitle {
+    font-size: 18pt;
+    text-align: center;
+    margin-bottom: 2cm;
+    color: #666;
+    font-style: italic;
+}
+
+.author {
+    text-align: center;
+    font-size: 12pt;
+    margin-bottom: 0.5em;
+}
+
+.date {
+    text-align: center;
+    font-size: 11pt;
+    color: #666;
+    margin-bottom: 3cm;
+}
+
+/* ==================== TABLE OF CONTENTS ==================== */
+#TOC {
+    page-break-after: always;
+    break-after: page;
+    margin-bottom: 2em;
+}
+
+#TOC ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#TOC ul ul {
+    padding-left: 1.5em;
+}
+
+#TOC li {
+    margin: 0.5em 0;
+}
+
+#TOC a {
+    text-decoration: none;
+    color: #0066cc;
+}
+
+#TOC a:after {
+    content: leader('.') target-counter(attr(href), page);
+    float: right;
+}
+
+/* ==================== DEFINITION LISTS ==================== */
+dl {
+    margin: 1em 0;
+}
+
+dt {
+    font-weight: bold;
+    color: #0066cc;
+    margin-top: 1em;
+    margin-bottom: 0.3em;
+}
+
+dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+}
+
+/* ==================== FOOTNOTES ==================== */
+.footnotes {
+    margin-top: 3em;
+    padding-top: 1em;
+    border-top: 2px solid #e0e0e0;
+    font-size: 9pt;
+}
+
+.footnote-ref {
+    vertical-align: super;
+    font-size: 8pt;
+    color: #0066cc;
+}
+
+/* ==================== PRINT OPTIMIZATIONS ==================== */
+@media print {
+    body {
+        font-size: 10pt;
+    }
+    
+    /* Avoid breaks in important elements */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    
+    pre, blockquote, table, figure {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Better link handling */
+    a {
+        color: #0066cc;
+    }
+    
+    /* Ensure code blocks are readable */
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+}
+
+/* ==================== KEYBOARD SHORTCUTS ==================== */
+kbd {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 9pt;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 0.1em 0.4em;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    display: inline-block;
+}
+
+/* ==================== EMOJI HANDLING ==================== */
+/* Ensure emojis display properly */
+.emoji {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* ==================== CUSTOM CLASSES ==================== */
+
+/* Command examples */
+.command-example {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1em;
+    border-radius: 4px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 9pt;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+/* File paths */
+.filepath {
+    font-family: "Courier New", Courier, monospace;
+    background-color: #f5f5f5;
+    padding: 0.1em 0.3em;
+    border-radius: 2px;
+    font-size: 9pt;
+    color: #d73a49;
+}
+
+/* Variable names */
+.varname {
+    font-family: "Courier New", Courier, monospace;
+    color: #6f42c1;
+    font-weight: 600;
+}
+
+/* Steps/Procedures */
+.step-number {
+    display: inline-block;
+    background-color: #0066cc;
+    color: white;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 1.5em;
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+/* High contrast for better readability */
+.high-contrast {
+    color: #000;
+    background-color: #fff;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+}
